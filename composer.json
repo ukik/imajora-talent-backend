@@ -18,6 +18,7 @@
         "laravel/socialite": "^5.5",
         "laravel/tinker": "^2.5",
         "staudenmeir/eloquent-eager-limit": "^1.0",
+        "stevebauman/purify": "^5.1",
         "unisharp/laravel-filemanager": "^2.5"
     },
     "require-dev": {
@@ -35,9 +36,40 @@
             "Database\\Seeders\\": "database/seeders/"
         },
         "classmap": [
+            "database/seeders",
+            "database/factories",
             "app/V1/Models",
             "app/V1/Models/Views",
-            "app/V1/Controllers"
+            "app/V1/Controllers",
+            "app/Traits"
+        ],
+        "files": [
+            "app/Helpers/Auth.php",
+            "app/Helpers/Barcode.php",
+            "app/Helpers/Cache.php",
+            "app/Helpers/Crypto.php",
+            "app/Helpers/Date.php",
+            "app/Helpers/EmailHelper.php",
+            "app/Helpers/Imagick.php",
+            "app/Helpers/Header.php",
+            "app/Helpers/helpers.php",
+            "app/Helpers/JWT.php",
+            "app/Helpers/Key.php",
+            "app/Helpers/Method.php",
+            "app/Helpers/Notification.php",
+            "app/Helpers/Paginate.php",
+            "app/Helpers/Protocol.php",
+            "app/Helpers/Response.php",
+            "app/Helpers/Route.php",
+            "app/Helpers/Route.php",
+            "app/Helpers/Secure.php",
+            "app/Helpers/Segment.php",
+            "app/Helpers/Query.php",
+            "app/Helpers/Session.php",
+            "app/Helpers/Sql.php",
+            "app/Helpers/String.php",
+            "app/Helpers/UserAgentHelper.php",
+            "app/Helpers/YoutubeIDHelper.php"
         ]
     },
     "autoload-dev": {

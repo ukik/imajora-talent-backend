@@ -20,6 +20,11 @@ class User extends Authenticatable
         return $this->hasMany(Post::class);
     }
 
+    public function follow()
+    {
+        return $this->hasOne(\UserFollow::class, 'user_id');
+    }
+
     public function game()
     {
         return $this->hasMany(Game::class);

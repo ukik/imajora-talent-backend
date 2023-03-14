@@ -5,11 +5,22 @@
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class VideoComment extends Model
+class UserImageFile extends Model
 {
+    use UserScope;
+    use \Staudenmeir\EloquentEagerLimit\HasEagerLimit;
+
     use HasFactory;
-    protected $table = 'ssr_video_komentar';
+    protected $table = 'user_image_file';
     protected $guarded = [];
+
+    protected $fillable = [
+        'post_id',
+        'user_id',
+        'parent_id',
+        'comment',
+        'diblokir',
+    ];
 
     public function user()
     {
@@ -23,6 +34,6 @@ class VideoComment extends Model
 
     public function childs()
     {
-        return $this->hasMany(VideoComment::class, 'parent_id');
+        return $this->hasMany(ImageComment::class, 'parent_id');
     }
 }

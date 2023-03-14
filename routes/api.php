@@ -138,3 +138,61 @@ Route::prefix('comments')->controller(CommentsController::class)->group(function
     // Route::post('/google-callback', 'googleCallback');
     // Route::post('/logout', 'logout')->middleware('token.guard');
 });
+
+Route::prefix('video/komentar-balasan')->controller(VideoKomentarBalasanController::class)->group(function () {
+    Route::get('/', 'index');
+    Route::get('/{post_id}/{parent_id}', 'komentar');
+    Route::get('/{post_id}/{parent_id}/more', 'komentar_more');
+    Route::post('/{post_id}/{parent_id}/input', 'komentar_input');
+    Route::post('/{id}/delete', 'komentar_delete');
+});
+
+
+
+
+Route::prefix('video')->group(function () {
+    Route::prefix('')->controller(VideoController::class)->group(function () {
+        Route::get('/', 'index');
+        Route::get('/show/{id}', 'show');
+        Route::get('/more', 'komentar_more');
+    });
+
+    Route::prefix('/komentar-balasan')->controller(VideoKomentarSemuaController::class)->group(function () {
+        // Route::get('/', 'index');
+        Route::get('/{post_id}/{parent_id}', 'komentar');
+        Route::get('/{post_id}/{parent_id}/more', 'komentar_more');
+        Route::post('/{post_id}/{parent_id}/input', 'komentar_input');
+        Route::post('/{id}/delete', 'komentar_delete');
+    });
+});
+
+Route::prefix('audio')->group(function () {
+    Route::prefix('')->controller(AudioController::class)->group(function () {
+        Route::get('/', 'index');
+        Route::get('/show/{id}', 'show');
+        Route::get('/more', 'komentar_more');
+    });
+});
+
+Route::prefix('image')->group(function () {
+    Route::prefix('')->controller(ImageController::class)->group(function () {
+        Route::get('/', 'index');
+        Route::get('/show/{id}', 'show');
+        Route::get('/more', 'komentar_more');
+    });
+});
+
+Route::prefix('video')->group(function () {
+    Route::prefix('')->controller(VideoController::class)->group(function () {
+        Route::get('/', 'index');
+        Route::get('/more', 'index');
+        Route::get('/show/{id}', 'show');
+
+        Route::post('/follow/{user_id}', 'follow');
+        Route::post('/bookmarked/{post_id}', 'bookmarked');
+        Route::post('/liked/{post_id}', 'liked');
+        Route::post('/comment', 'comment');
+        Route::post('/delete/{post_id}', 'delete');
+        Route::post('/delete-comment/{post_id}', 'delete_comment');
+    });
+});

@@ -4,6 +4,10 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Scope;
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -24,5 +28,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         //
+
+        Model::addGlobalScope('user_id', function (Builder $builder) {
+            $builder->where('user_id', '1');
+        });
     }
 }

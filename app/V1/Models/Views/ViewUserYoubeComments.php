@@ -5,12 +5,13 @@
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class VideoCommentView extends Model
+class ViewUserYoubeComments extends Model
 {
     use \Staudenmeir\EloquentEagerLimit\HasEagerLimit;
 
+    use UserScope;
     use HasFactory;
-    protected $table = 'view_ssr_video_komentar';
+    protected $table = 'view_user_youtube_comments';
     protected $guarded = [];
 
     public function user()
@@ -25,6 +26,6 @@ class VideoCommentView extends Model
 
     public function childs()
     {
-        return $this->hasMany(VideoCommentView::class, 'parent_id'); //->limit(5);
+        return $this->hasMany(ViewUserYoubeComments::class, 'parent_id'); //->limit(5);
     }
 }
