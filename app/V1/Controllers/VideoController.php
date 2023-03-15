@@ -201,6 +201,7 @@ class VideoController extends Controller
         $data = UserVideoComments::insert($data);
 
         $comment = UserVideoComments::with([
+            'user.follow',
             'user' => function($q) {
                 return $q->select([
                     'id','name','role','avatar'
@@ -278,68 +279,85 @@ class VideoController extends Controller
 
 
 
+    public function komentar_balasan($id = null) {
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-    public function komentar($post_id = null, $parent_id = 12159) {
-
-        $comment = \ViewUserVideoComments::query()
-            ->where('parent_id', $parent_id)
-            // ->where('id', $id)
+        $comment = \UserVideoComments::query()
+            ->with([
+                'user.follow',
+                'user' => function($q) {
+                    return $q->select([
+                        'id','name','role','avatar'
+                    ]);
+                },
+                'replied' => function($q) {
+                    return $q->select([
+                        'id','name','role','avatar'
+                    ]);
+                },
+            ])
+            ->where('id', $id)
             ->orderBy('id','desc')
             ->first();
 
-        $reply = \ViewUserVideoComments::query()
-            ->where('parent_id', $parent_id)
-            ->orderBy('id','desc')
-            ->paginate();
+        $reply = null;
+        if($comment) {
+            $reply = \UserVideoComments::query()
+                ->with([
+                    'user.follow',
+                    'user' => function($q) {
+                        return $q->select([
+                            'id','name','role','avatar'
+                        ]);
+                    },
+                    'replied' => function($q) {
+                        return $q->select([
+                            'id','name','role','avatar'
+                        ]);
+                    },
+                ])
+                ->where('parent_id', $id)
+                ->orderBy('id','desc')
+                ->paginate();
+        }
 
         return MetaResponse::successWithMsg('', [
             'comment' => $comment,
             'reply' => $reply,
         ]);
     }
+    public function komentar_balasan_more($id = null) {
 
-    public function komentar_more($post_id = null, $parent_id = 12159) {
-
-        // $comment = \ViewUserVideoComments::query()
-        //     ->where('parent_id', $parent_id)
-        //     ->where('id', $id)
-        //     ->first();
-
-        $reply = \ViewUserVideoComments::query()
-            ->where('parent_id', $parent_id)
+        $reply = \UserVideoComments::query()
+            ->with([
+                'user.follow',
+                'user' => function($q) {
+                    return $q->select([
+                        'id','name','role','avatar'
+                    ]);
+                },
+                'replied' => function($q) {
+                    return $q->select([
+                        'id','name','role','avatar'
+                    ]);
+                },
+            ])
+            ->where('parent_id', $id)
             ->orderBy('id','desc')
             ->paginate();
+
 
         return MetaResponse::successWithMsg('', [
             'reply' => $reply,
         ]);
     }
-
-    public function komentar_input(Request $request, $post_id = null, $parent_id = 12159) {
-        // Validasi
+    public function komentar_balasan_comment(Request $request) {
         $validator = Validator::make(
-            $request->all(),
             [
-                // 'g-recaptcha-response' => 'required|captcha',
+                'comment' => $request->comment
+            ],
+            [
                 'comment' => 'required',
             ],
-            // [
-            //     'required' => 'Please verify that you are not a robot.',
-            //     'captcha' => 'Captcha error! try again later or contact site admin.',
-            // ],
         );
 
         if ($validator->fails()) {
@@ -348,27 +366,80 @@ class VideoController extends Controller
 
         $created_at = date('Y-m-d h:i:s');
         $data = [
+            'post_id' => request()->post_id,
             'user_id' => $this->me,
-            'post_id' => $post_id,
-            'parent_id' => $parent_id,
-            'comment' => $request->comment,
+
+            'parent_id' => request()->parent_id,
+            'replied_id' => request()->replied_id,
+
+            'comment' => Purify::clean($request->comment),
             'created_at' => $created_at,
         ];
 
         $data = UserVideoComments::insert($data);
-        $data = ViewUserVideoComments::whereCreatedAt($created_at)->first();
+
+        $comment = UserVideoComments::with([
+            'user.follow',
+            'user' => function($q) {
+                return $q->select([
+                    'id','name','role','avatar'
+                ]);
+            },
+            'replied' => function($q) {
+                return $q->select([
+                    'id','name','role','avatar'
+                ]);
+            },
+        ])->whereCreatedAt($created_at)->first();
+
+        UserVideoCommentedTotal::updateOrCreate([
+            'post_id' => request()->post_id,
+        ],[
+            'post_id' => request()->post_id,
+            'total' => DB::raw('total + 1')
+        ]);
 
         return MetaResponse::successWithMsg('', [
-            'reply' => $data,
+            'comment' => $comment,
         ]);
     }
-
-    public function komentar_delete(Request $request, $id) {
+    public function komentar_balasan_delete(Request $request, $id) {
 
         $data = UserVideoComments::whereId($id)->delete();
 
+        UserVideoCommentedTotal::updateOrCreate([
+            'post_id' => $id,
+        ],[
+            'post_id' => $id,
+            'total' => DB::raw('total - 1')
+        ]);
+
         return MetaResponse::success($data);
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // public function komentar_delete(Request $request, $id) {
+
+    //     $data = UserVideoComments::whereId($id)->delete();
+
+    //     return MetaResponse::success($data);
+    // }
 
 
 
