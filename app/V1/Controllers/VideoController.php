@@ -23,7 +23,11 @@ class VideoController extends Controller
         // ->withCount('comments')
         // ->whereId(134)
         ->with([
-            'user',
+            'user' => function($q) {
+                return $q->select([
+                    'id','name','role','avatar'
+                ]);
+            },
             'liked_total',
             'visited_total',
             'shared_total',
@@ -123,7 +127,6 @@ class VideoController extends Controller
             'bookmarked_total' => $bookmarked_total,
         ]);
     }
-
 
     public function liked(Request $request, $post_id = null) {
 
@@ -276,9 +279,6 @@ class VideoController extends Controller
 
 
 
-
-
-
     public function komentar_balasan($id = null) {
 
         $comment = \UserVideoComments::query()
@@ -421,200 +421,134 @@ class VideoController extends Controller
 
 
 
+    public function komentar_semua($id = null) {
+        $detail = \UserVideo::query()
+        ->with([
+            'user' => function($q) {
+                return $q->select([
+                    'id','name','role','avatar'
+                ]);
+            },
+            'liked_total',
+            'visited_total',
+            'shared_total',
+            'commented_total',
+            'bookmarked_total',
+            'liked',
+            'visited',
+            'shared',
+            'commented',
+            'bookmarked',
+            'user.follow',
+            'comments.user' => function($q) {
+                return $q->select([
+                    'id','name','role','avatar'
+                ]);
+            },
+            'comments.replied' => function($q) {
+                return $q->select([
+                    'id','name','role','avatar'
+                ]);
+            },
+            'comments' => function($q) {
+                return $q->orderBy('id','desc')->limit(3);
+            }
+        ])
+        ->where('id', $id)
+        ->orderBy('id','desc')
+        ->first();
 
+        $comments = \UserVideoComments::query()
+            ->with([
+                'user.follow',
+                'user' => function($q) {
+                    return $q->select([
+                        'id','name','role','avatar'
+                    ]);
+                },
+                'replied' => function($q) {
+                    return $q->select([
+                        'id','name','role','avatar'
+                    ]);
+                },
+            ])
+            ->where('post_id', $id)
+            ->orderBy('id','desc')
+            ->paginate();
 
+        return MetaResponse::successWithMsg('', [
+            'detail' => $detail,
+            'comments' => $comments,
+        ]);
+    }
 
-
-
-
-
-
-
-
-
-
-
-    // public function komentar_delete(Request $request, $id) {
-
-    //     $data = UserVideoComments::whereId($id)->delete();
-
-    //     return MetaResponse::success($data);
-    // }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // Creat a new comment on the post or game
-    public function post_comment(Request $request, $id)
-    {
-        $post = Post::find($id);
-
-        // Validasi
+    public function komentar_semua_comment(Request $request) {
         $validator = Validator::make(
-            $request->all(),
             [
-                'g-recaptcha-response' => 'required|captcha',
+                'comment' => $request->comment
             ],
             [
-                'required' => 'Please verify that you are not a robot.',
-                'captcha' => 'Captcha error! try again later or contact site admin.',
+                'comment' => 'required',
             ],
         );
 
         if ($validator->fails()) {
-            return redirect("/blog/$post->slug#comments")->withErrors($validator);
+            return MetaResponse::error('');
         }
 
+        $created_at = date('Y-m-d h:i:s');
         $data = [
-            'message' => $request->message,
-            'parent' => '0',
-            'post_id' => $request->id,
+            'post_id' => request()->post_id,
+            'user_id' => $this->me,
+
+            'parent_id' => request()->parent_id,
+            'replied_id' => request()->replied_id,
+
+            'comment' => Purify::clean($request->comment),
+            'created_at' => $created_at,
         ];
 
-        if (Auth::check()) {
-            $data['name'] = Auth::user()->name;
-            $data['email'] = Auth::user()->email;
-            $data['user_id'] = Auth::user()->id;
-        } else {
-            $data['name'] = $request->name;
-            $data['email'] = $request->email;
-        }
+        $data = UserVideoComments::insert($data);
 
-        Comment::create($data);
-        return redirect("/blog/$post->slug#comments")->with('success', 'Comment has been send!');
+        $comment = UserVideoComments::with([
+            'user.follow',
+            'user' => function($q) {
+                return $q->select([
+                    'id','name','role','avatar'
+                ]);
+            },
+            'replied' => function($q) {
+                return $q->select([
+                    'id','name','role','avatar'
+                ]);
+            },
+        ])->whereCreatedAt($created_at)->first();
+
+        UserVideoCommentedTotal::updateOrCreate([
+            'post_id' => request()->post_id,
+        ],[
+            'post_id' => request()->post_id,
+            'total' => DB::raw('total + 1')
+        ]);
+
+        return MetaResponse::successWithMsg('', [
+            'comment' => $comment,
+        ]);
+    }
+    public function komentar_semua_delete(Request $request, $id) {
+
+        $data = UserVideoComments::whereId($id)->delete();
+
+        UserVideoCommentedTotal::updateOrCreate([
+            'post_id' => $id,
+        ],[
+            'post_id' => $id,
+            'total' => DB::raw('total - 1')
+        ]);
+
+        return MetaResponse::success($data);
     }
 
-    public function post_reply(Request $request, $id)
-    {
-        $post = Post::find($id);
 
-        // Validasi
-        $validator = Validator::make(
-            $request->all(),
-            [
-                'g-recaptcha-response' => 'required|captcha',
-            ],
-            [
-                'required' => 'Please verify that you are not a robot.',
-                'captcha' => 'Captcha error! try again later or contact site admin.',
-            ],
-        );
 
-        if ($validator->fails()) {
-            return redirect("/blog/$post->slug#comments")->withErrors($validator);
-        }
-
-        $data = [
-            'message' => $request->message,
-            'parent' => $request->parent,
-            'post_id' => $request->id,
-        ];
-
-        if (Auth::check()) {
-            $data['name'] = Auth::user()->name;
-            $data['email'] = Auth::user()->email;
-            $data['user_id'] = Auth::user()->id;
-        } else {
-            $data['name'] = $request->name;
-            $data['email'] = $request->email;
-        }
-
-        Comment::create($data);
-        return redirect("/blog/$post->slug#comments")->with('success', 'Replies comment has been send!');
-    }
-
-    public function game_comment(Request $request, $id)
-    {
-        $game = Game::find($id);
-
-        // Validasi
-        $validator = Validator::make(
-            $request->all(),
-            [
-                'g-recaptcha-response' => 'required|captcha',
-            ],
-            [
-                'required' => 'Please verify that you are not a robot.',
-                'captcha' => 'Captcha error! try again later or contact site admin.',
-            ],
-        );
-
-        if ($validator->fails()) {
-            return redirect("/game/$game->slug#comments")->withErrors($validator);
-        }
-
-        $data = [
-            'message' => $request->message,
-            'parent' => '0',
-            'game_id' => $request->id,
-        ];
-
-        if (Auth::check()) {
-            $data['name'] = Auth::user()->name;
-            $data['email'] = Auth::user()->email;
-            $data['user_id'] = Auth::user()->id;
-        } else {
-            $data['name'] = $request->name;
-            $data['email'] = $request->email;
-        }
-
-        // return response()->json($data);
-        GameComment::create($data);
-        return redirect("/game/$game->slug#comments")->with('success', 'Comment has been send!');
-    }
-
-    public function game_reply(Request $request, $id)
-    {
-        $game = Game::find($id);
-
-        // Validasi
-        $validator = Validator::make(
-            $request->all(),
-            [
-                'g-recaptcha-response' => 'required|captcha',
-            ],
-            [
-                'required' => 'Please verify that you are not a robot.',
-                'captcha' => 'Captcha error! try again later or contact site admin.',
-            ],
-        );
-
-        if ($validator->fails()) {
-            return redirect("/game/$game->slug#comments")->withErrors($validator);
-        }
-
-        $data = [
-            'message' => $request->message,
-            'parent' => $request->parent,
-            'game_id' => $request->id,
-        ];
-
-        if (Auth::check()) {
-            $data['name'] = Auth::user()->name;
-            $data['email'] = Auth::user()->email;
-            $data['user_id'] = Auth::user()->id;
-        } else {
-            $data['name'] = $request->name;
-            $data['email'] = $request->email;
-        }
-
-        // return response()->json($data);
-        GameComment::create($data);
-        return redirect("/game/$game->slug#comments")->with('success', 'Replies comment has been send!');
-    }
 }

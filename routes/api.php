@@ -182,12 +182,10 @@ Route::prefix('image')->group(function () {
     });
 });
 
-// Route::prefix('video')->group(function () {
+
 Route::prefix('video')->controller(VideoController::class)->group(function () {
     Route::get('/', 'index');
     Route::get('/more', 'index');
-    // Route::get('/show/{id}', 'show');
-
     Route::post('/follow/{user_id}', 'follow');
     Route::post('/bookmarked/{post_id}', 'bookmarked');
     Route::post('/liked/{post_id}', 'liked');
@@ -195,11 +193,14 @@ Route::prefix('video')->controller(VideoController::class)->group(function () {
     Route::post('/delete/{post_id}', 'delete');
     Route::post('/delete-comment/{post_id}', 'delete_comment');
 
-    // /{parent_id}
     Route::get('/komentar-balasan/{id}', 'komentar_balasan');
     Route::get('/komentar-balasan-more/{id}', 'komentar_balasan_more');
     Route::post('/komentar-balasan-comment', 'komentar_balasan_comment');
     Route::post('/komentar-balasan-delete/{id}', 'komentar_balasan_delete');
-    // Route::post('/komentar-balasan/{id}/delete', 'komentar_delete');
+
+    Route::get('/komentar-semua/{id}', 'komentar_semua');
+    Route::post('/komentar-semua-comment', 'komentar_semua_comment');
+    Route::post('/komentar-semua-delete/{id}', 'komentar_semua_delete');
+
 });
-// });
+
