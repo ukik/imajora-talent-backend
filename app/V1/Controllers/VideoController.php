@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 
 use Stevebauman\Purify\Facades\Purify;
 
@@ -481,7 +482,6 @@ class VideoController extends Controller
             'comments' => $comments,
         ]);
     }
-
     public function komentar_semua_comment(Request $request) {
         $validator = Validator::make(
             [
@@ -551,4 +551,194 @@ class VideoController extends Controller
 
 
 
+    public function form_edit($id = null) {
+        $detail = \UserVideo::query()
+        ->where('id', $id)
+        ->first();
+
+        return MetaResponse::successWithMsg('', [
+            'detail' => $detail,
+        ]);
+    }
+
+    public function form_create(Request $request, $id = null)
+    {
+        $me = $this->me;
+
+        $validator = Validator::make(
+            [
+                // 'media' => $request->media,
+                // 'cover' => $request->cover,
+                'description' => $request->description,
+            ],
+            [
+                'description' => 'required|string|max:2500',
+                // 'media' => 'required|file|mimetypes:video/mp4|max:100000', // max 100 mb
+                // 'cover' => 'required|file|mimes:jpeg,png,jpg,gif'
+            ],
+        );
+
+        if ($validator->fails()) {
+            return MetaResponse::error($validator->errors());
+        }
+
+        $created_at = date('Y-m-d h:i:s');
+        $form = [
+            'id' => $id,
+            'user_id' => $me,
+            'description' => $request->description,
+            'created_at' => $created_at,
+        ];
+        // $video = new UserVideo;
+        // $video->user_id = $this->me;
+        // $video->description = $request->description;
+
+        // $fileName = time().'.'.$request->media->getClientOriginalExtension();
+        // $request->media->move(public_path('upload'), $fileName);
+
+        if($id) { // jika EDIT
+            $data = UserVideo::whereId($id)->first();
+        }
+
+        if(isset($request->media) && $request->hasFile('media')):
+
+            $validator = Validator::make(
+                [
+                    'media' => $request->media,
+                ],
+                [
+                    'media' => 'required|file|mimetypes:video/mp4|max:100000', // max 100 mb
+                ],
+            );
+
+            if ($validator->fails()) {
+                return MetaResponse::error($validator->errors());
+            }
+
+            if (File::exists($data->file) && !blank($data->file)) :
+                unlink($data->file);
+            endif;
+
+            // make unique name for image
+            $currentDate = \Carbon\Carbon::now()->toDateString();
+            $imageName  = '1'.'-'.$currentDate.'-'.uniqid().'.'.
+                $request->media->getClientOriginalExtension();
+
+            $directory          = 'upload/video/'.$me.'/'.'file/';
+            $profileImgUrl      = $directory . $imageName;
+            $request->media->move($directory, $imageName);
+
+            $form['file']    = str_replace("public/","",$profileImgUrl);
+
+            // modifikasi dilakukan setelah file disimpan di SERVER
+            // Image::make($user->foto)->fit(260, 260)->save($directory . '-260x260-'. $imageName);
+        endif;
+
+        // $fileName = time().'.'.$request->cover->getClientOriginalExtension();
+        // $request->cover->move(public_path('upload'), $fileName);
+
+        if(isset($request->cover) && $request->hasFile('cover')):
+
+            $validator = Validator::make(
+                [
+                    'cover' => $request->cover,
+                ],
+                [
+                    'cover' => 'required|file|mimes:jpeg,png,jpg,gif'
+                ],
+            );
+
+            if ($validator->fails()) {
+                return MetaResponse::error($validator->errors());
+            }
+
+            if (File::exists($data->cover) && !blank($data->cover)) :
+                unlink($data->cover);
+            endif;
+
+            // make unique name for image
+             $currentDate = \Carbon\Carbon::now()->toDateString();
+             $imageName  = '1'.'-'.$currentDate.'-'.uniqid().'.'.
+                 $request->cover->getClientOriginalExtension();
+
+             $directory          = 'upload/video/'.$me.'/'.'cover/';
+             $profileImgUrl      = $directory . $imageName;
+             $request->cover->move($directory, $imageName);
+
+             $form['cover']    = str_replace("public/","",$profileImgUrl);
+
+             // modifikasi dilakukan setelah file disimpan di SERVER
+             // Image::make($user->foto)->fit(260, 260)->save($directory . '-260x260-'. $imageName);
+         endif;
+
+        // if ($request->hasFile('file')) {
+        //     $path = $request->file('file')->store('file', ['disk' => 'my_files']);
+        //     $video->file = $path;
+        // }
+
+        UserVideo::updateOrCreate([
+            'id' => $id
+        ], $form);
+
+        if($id) {
+            $content = UserVideo::whereId($id)->first();
+        } else {
+            $content = UserVideo::where('created_at', $created_at)->first();
+        }
+
+        return MetaResponse::successWithMsg('', [
+            'content' => $content,
+        ]);
+    }
+
+    public function form_delete_cover(Request $request, $id)
+    {
+        $data = UserVideo::whereId($id)->first();
+
+        if (File::exists($data->cover) && !blank($data->cover)) :
+            unlink($data->cover);
+        endif;
+
+        UserVideo::whereId($id)->update([
+            'cover' => NULL
+        ]);
+
+        return MetaResponse::success('');
+    }
+
+    public function form_delete_media(Request $request, $id)
+    {
+
+        $data = UserVideo::whereId($id)->first();
+
+        if (File::exists($data->file) && !blank($data->file)) :
+            unlink($data->file);
+        endif;
+
+        UserVideo::whereId($id)->update([
+            'file' => NULL
+        ]);
+
+        return MetaResponse::success('');
+    }
+
+    public function form_delete(Request $request, $id)
+    {
+        // Gak usah soalnya pakai soft delete
+        /*
+        $data = UserVideo::whereId($id)->first();
+
+        if (File::exists($data->file) && !blank($data->file)) :
+            unlink($data->file);
+        endif;
+
+        if (File::exists($data->cover) && !blank($data->cover)) :
+            unlink($data->cover);
+        endif;
+        */
+
+        UserVideo::whereId($id)->delete();
+
+        return MetaResponse::success('');
+    }
 }

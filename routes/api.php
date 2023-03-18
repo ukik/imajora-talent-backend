@@ -202,5 +202,10 @@ Route::prefix('video')->controller(VideoController::class)->group(function () {
     Route::post('/komentar-semua-comment', 'komentar_semua_comment');
     Route::post('/komentar-semua-delete/{id}', 'komentar_semua_delete');
 
+    Route::get('/form/{id}', 'form_edit');
+    Route::post('/form/create/{id?}', 'form_create');
+    Route::post('/form/delete-cover/{id}', 'form_delete_cover');
+    Route::post('/form/delete-media/{id}', 'form_delete_media');
+    Route::post('/form/delete/{id}', 'form_delete');
 });
 
