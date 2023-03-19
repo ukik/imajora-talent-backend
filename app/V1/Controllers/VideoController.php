@@ -565,22 +565,22 @@ class VideoController extends Controller
     {
         $me = $this->me;
 
-        $validator = Validator::make(
-            [
-                // 'media' => $request->media,
-                // 'cover' => $request->cover,
-                'description' => $request->description,
-            ],
-            [
-                'description' => 'required|string|max:2500',
-                // 'media' => 'required|file|mimetypes:video/mp4|max:100000', // max 100 mb
-                // 'cover' => 'required|file|mimes:jpeg,png,jpg,gif'
-            ],
-        );
+        // $validator = Validator::make(
+        //     [
+        //         // 'media' => $request->media,
+        //         // 'cover' => $request->cover,
+        //         'description' => $request->description,
+        //     ],
+        //     [
+        //         'description' => 'required|string|max:2500',
+        //         // 'media' => 'required|file|mimetypes:video/mp4|max:100000', // max 100 mb
+        //         // 'cover' => 'required|file|mimes:jpeg,png,jpg,gif'
+        //     ],
+        // );
 
-        if ($validator->fails()) {
-            return MetaResponse::error($validator->errors());
-        }
+        // if ($validator->fails()) {
+        //     return MetaResponse::error($validator->errors());
+        // }
 
         $created_at = date('Y-m-d h:i:s');
         $form = [
@@ -589,9 +589,6 @@ class VideoController extends Controller
             'description' => $request->description,
             'created_at' => $created_at,
         ];
-        // $video = new UserVideo;
-        // $video->user_id = $this->me;
-        // $video->description = $request->description;
 
         // $fileName = time().'.'.$request->media->getClientOriginalExtension();
         // $request->media->move(public_path('upload'), $fileName);
@@ -621,10 +618,10 @@ class VideoController extends Controller
 
             // make unique name for image
             $currentDate = \Carbon\Carbon::now()->toDateString();
-            $imageName  = '1'.'-'.$currentDate.'-'.uniqid().'.'.
+            $imageName  = $me.'-'.$currentDate.'-'.uniqid().'.'.
                 $request->media->getClientOriginalExtension();
 
-            $directory          = 'upload/video/'.$me.'/'.'file/';
+            $directory          = 'upload/'.$me.'/'.'video/file/';
             $profileImgUrl      = $directory . $imageName;
             $request->media->move($directory, $imageName);
 
@@ -658,10 +655,10 @@ class VideoController extends Controller
 
             // make unique name for image
              $currentDate = \Carbon\Carbon::now()->toDateString();
-             $imageName  = '1'.'-'.$currentDate.'-'.uniqid().'.'.
+             $imageName  = $me.'-'.$currentDate.'-'.uniqid().'.'.
                  $request->cover->getClientOriginalExtension();
 
-             $directory          = 'upload/video/'.$me.'/'.'cover/';
+             $directory          = 'upload/'.$me.'/'.'video/cover/';
              $profileImgUrl      = $directory . $imageName;
              $request->cover->move($directory, $imageName);
 

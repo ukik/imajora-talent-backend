@@ -5,13 +5,13 @@
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class UserImage extends Model
+class UserYoutube___ extends Model
 {
     use UserScope;
     use \Staudenmeir\EloquentEagerLimit\HasEagerLimit;
 
     use HasFactory;
-    protected $table = 'user_image';
+    protected $table = 'user_youtube';
     protected $guarded = [];
 
     public function user()
@@ -26,16 +26,11 @@ class UserImage extends Model
 
     public function comments()
     {
-        return $this->hasMany(ViewUserImageComments::class, 'post_id');
-    }
-
-    public function images()
-    {
-        return $this->hasMany(UserImageFile::class, 'post_id');
+        return $this->hasMany(ViewUserYoutubeComments::class, 'post_id');
     }
 
     public function childs()
     {
-        return $this->hasMany(ImageComment::class, 'parent_id');
+        return $this->hasMany(YoutubeComment::class, 'parent_id');
     }
 }

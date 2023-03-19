@@ -5,22 +5,14 @@
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class UserAudioComments extends Model
+class UserAudio___ extends Model
 {
     use UserScope;
     use \Staudenmeir\EloquentEagerLimit\HasEagerLimit;
 
     use HasFactory;
-    protected $table = 'user_audio_comments';
+    protected $table = 'user_audio';
     protected $guarded = [];
-
-    protected $fillable = [
-        'post_id',
-        'user_id',
-        'parent_id',
-        'comment',
-        'diblokir',
-    ];
 
     public function user()
     {
@@ -30,6 +22,11 @@ class UserAudioComments extends Model
     public function post()
     {
         return $this->belongsTo(Post::class);
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(ViewUserAudioComments::class, 'post_id');
     }
 
     public function childs()

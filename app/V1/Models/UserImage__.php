@@ -5,22 +5,14 @@
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class UserImageComments extends Model
+class UserImage__ extends Model
 {
     use UserScope;
     use \Staudenmeir\EloquentEagerLimit\HasEagerLimit;
 
     use HasFactory;
-    protected $table = 'user_image_comments';
+    protected $table = 'user_image';
     protected $guarded = [];
-
-    protected $fillable = [
-        'post_id',
-        'user_id',
-        'parent_id',
-        'comment',
-        'diblokir',
-    ];
 
     public function user()
     {
@@ -30,6 +22,16 @@ class UserImageComments extends Model
     public function post()
     {
         return $this->belongsTo(Post::class);
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(ViewUserImageComments::class, 'post_id');
+    }
+
+    public function images()
+    {
+        return $this->hasMany(UserImageFile::class, 'post_id');
     }
 
     public function childs()

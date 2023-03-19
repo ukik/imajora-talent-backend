@@ -5,13 +5,13 @@
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class UserImageFile extends Model
+class UserImageComments___ extends Model
 {
     use UserScope;
     use \Staudenmeir\EloquentEagerLimit\HasEagerLimit;
 
     use HasFactory;
-    protected $table = 'user_image_file';
+    protected $table = 'user_image_comments';
     protected $guarded = [];
 
     protected $fillable = [
